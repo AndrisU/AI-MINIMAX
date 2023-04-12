@@ -36,9 +36,12 @@ class Player(Enum):
 class Game:
     
     def __init__(self, starting_number=12902400, target_number=7):
+        # Inicializē spēles stāvokli ar norādīto sākuma un mērķa skaitli
         self.current_number = starting_number
         self.target_number = target_number
+        # Nostāda pašreizējo spēlētāju kā cilvēku (lietotāju)
         self.current_player = Player.USER
+        # Inicializē gājienu vēstures sarakstu kā tukšu
         self.moves_history = []
 
 # definē funkciju "is_divisible", kas atgriež "True" vai "False"
@@ -49,18 +52,25 @@ class Game:
 #  Ja dotais skaitlis dalās bez atlikuma ar pašreizējo skaitli, tad metode reģistrē spēlētāja
 #  gājienu vēsturē, samazina pašreizējo skaitli, un nomaina pašreizējo spēlētāju uz otro.    
     def make_move(self, number):
+        # Pārbauda, vai pašreizējais skaitlis dalās ar norādīto skaitli
         if self.is_divisible(number):
+            # Ja dalās, pievieno gājienu vēsturei un atjauno pašreizējo skaitli
             self.moves_history.append((self.current_player, number))
             self.current_number //= number
+            # Maina pašreizējo spēlētāju
             self.switch_player()
         else:
+            # Ja nevar veikt gājienu, izdot ValueError ar kļūdas paziņojumu
             raise ValueError("Invalid move")
 
 #funkcija pārslēdz spēlētāju
     def switch_player(self):
+        # Pārbauda, vai pašreizējais spēlētājs ir lietotājs
         if self.current_player == Player.USER:
+            # Ja pašreizējais spēlētājs ir lietotājs, nomaina to uz datoru
             self.current_player = Player.COMPUTER
         else:
+            # Pretējā gadījumā nomaina pašreizējo spēlētāju uz lietotāju
             self.current_player = Player.USER
 
 #pārbauda, vai spēle ir beigusies, salīdzinot pašreizējo skaitli ar mērķa skaitli un atgriežot "True", ja tie sakrīt, citādi atgriežot "False".
@@ -116,6 +126,7 @@ class GameGUI:
         self.window.mainloop()# Sāk Tkinter galveno cilpu
 
 # Metode, kas izveido grafiskās lietotāja saskarnes komponentes
+# lambda funkcija izsauc self.on_user_move(x) funkciju, kad poga tiek nospiesta.
     def create_widgets(self):
 
         
@@ -149,16 +160,20 @@ class GameGUI:
 
 # Metode, kas atjaunina pogu stāvokli un krāsu atkarībā no to spējas dalīt pašreizējo skaitli        
     def update_buttons(self):
+        # Atjauno pogu stāvokli un krāsu atkarībā no to izmantojamības
         for button, number in [(self.button2, 2), (self.button3, 3), (self.button4, 4), (self.button5, 5)]:
-            if self.game.is_divisible(number):
+            if self.game.is_divisible(number):# Pārbauda, vai pašreizējais skaitlis ir dalāms ar šo skaitli
+                # Ja dalāms, uzstāda pogas fonu zaļu un atļauj tās lietošanu
                 button.config(bg="green", state=tk.NORMAL)
             else:
+                # Ja nav dalāms, uzstāda pogas fonu sarkanu un neļauj tās lietošanu
                 button.config(bg="red", state=tk.DISABLED)
 
 # Metode, kas ļauj lietotājam izvēlēties, kurš sāks spēli
     def choose_starting_player(self):
 
         self.update_buttons()
+        # Izveido jaunu dialoglodziņu sākotnējā spēlētāja izvēlei
         choose_player_window = tk.Toplevel(self.window)
         choose_player_window.title("Izvēlies, kurš sāk spēli")
         choose_player_window.update_idletasks()
@@ -166,40 +181,49 @@ class GameGUI:
         choose_player_window.lift()
 
         # Izveido pogu ar tekstu "cilvēks" un piesaista tai funkciju, kas atbilst Player.USER
-        asd_button = tk.Button(choose_player_window, text="cilvēks",font=("Arial", 20), command=lambda: self.set_starting_player(Player.USER, choose_player_window))
-        asd_button.pack(pady=10)
+        cilveks_button = tk.Button(choose_player_window, text="cilvēks",font=("Arial", 20), command=lambda: self.set_starting_player(Player.USER, choose_player_window))
+        cilveks_button.pack(pady=10)
 
         # Izveido pogu ar tekstu "dators" un piesaista tai funkciju, kas atbilst Player.COMPUTER
-        dfg_button = tk.Button(choose_player_window, text="dators",font=("Arial", 20), command=lambda: self.set_starting_player(Player.COMPUTER, choose_player_window))
-        dfg_button.pack(pady=10)
+        dators_button = tk.Button(choose_player_window, text="dators",font=("Arial", 20), command=lambda: self.set_starting_player(Player.COMPUTER, choose_player_window))
+        dators_button.pack(pady=10)
        
         update_geometry(choose_player_window)
 
 # Metode, kas iestata sākotnējo spēlētāju un ļauj datoram veikt gājienu, ja nepieciešams
     def set_starting_player(self, player, window):
+        # Iestata sākotnējo spēlētāju
         self.game.current_player = player
 
+        # Ja sākotnējais spēlētājs ir dators, dators veic pirmo gājienu
         if player == Player.COMPUTER:
             self.computer_move()
+        # Aizver dialoglodziņu, kurā tika izvēlēts sākotnējais spēlētājs
         window.destroy()
         
 # Metode, kas tiek izsaukta, kad lietotājs veic gājienu
     def on_user_move(self, number):
-        
+        # Mēģina veikt lietotāja gājienu
         try:
+            # Veic lietotāja gājienu spēlē
             self.game.make_move(number)
+            # Atjaunina tekstu ar pašreizējo skaitli
             self.label.config(text=f"Pašreizējais skaitlis: {self.game.current_number}")
+            # Atjaunina gājienu vēstures teksta lauku
             self.update_history()
 
+            # Pārbauda, vai spēle ir beigusies
             if self.game.is_game_over():
+                # Parāda paziņojumu, ka lietotājs uzvarēja
                 messagebox.showinfo("Spēle beigusies", "Jūs uzvarējāt!")
                 self.update_history()
                 self.reset_game()
             else:
+                # Ja spēle nav beigusies, dators veic savu gājienu
                 self.computer_move()
 
 
-
+        # Ja notiek kļūda (piemēram, neiespējams gājiens), parāda kļūdas paziņojumu
         except ValueError:
             messagebox.showerror("Kļūda", "Nederīgs gājiens")
 
@@ -208,48 +232,70 @@ class GameGUI:
 
 # Metode, kas veic datora gājienu, izmantojot minimax algoritmu
     def computer_move(self):
+        # Inicializē labāko gājienu kā None un labāko novērtējumu kā negatīvu bezgalību
         best_move = None
         best_eval = float('-inf')
         
+        # Izmanto ciklu, lai pārbaudītu katru skaitli no 2 līdz 5
         for number in [2, 3, 4, 5]:
+            # Pārbauda, vai pašreizējais skaitlis ir dalāms ar šo skaitli
             if self.game.is_divisible(number):
+                # Ja tā, veicam gājienu, dalot pašreizējo skaitli ar izvēlēto skaitli
                 self.game.current_number //= number
+                # Izsauc minimax algoritmu, lai novērtētu šo gājienu
                 eval = self.game.minimax(20, False)  # var mainīt pārmeklēšanas dziļumu pēc nepieciešamības
+                # Atjaunojam pašreizējo skaitli, atceļot gājienu
                 self.game.current_number *= number 
 
+                # Pārbauda, vai šī gājiena novērtējums ir labāks nekā iepriekšējais labākais
                 if eval > best_eval:
+                    # Ja tā, atjauninām labāko novērtējumu un labāko gājienu
                     best_eval = eval
                     best_move = number
 
+        # Pārbauda, vai labākais gājiens tika atrasts
         if best_move is not None:
+            # Ja tā, veic labāko gājienu un atjaunina ekrāna tekstu un pogas
             self.game.make_move(best_move)
             self.label.config(text=f"Pašreizējais skaitlis: {self.game.current_number}")
             self.update_history()
             self.update_buttons()
+            # Pārbauda, vai spēle ir beigusies
             if self.game.is_game_over():
-               
+               # Ja tā, informē lietotāju par datora uzvaru
                 messagebox.showinfo("Spēle beigusies", "Dators uzvarēja!")
                 
                 self.reset_game()
         else:
+            # Ja labākais gājiens nav atrasts, informē lietotāju par kļūdu
             messagebox.showerror("Kļūda", "Dators nevarēja veikt gājienu")
 
+        # Atjaunina vēsturi un pogu stāvokli
         self.update_history()
         self.update_buttons()
 
 # Metode, kas atjaunina gājienu vēsturi grafiskajā lietotāja saskarnē
     def update_history(self):
-        self.history_text.delete(1.0, tk.END)  # Dzēš iepriekšējo vēsturi
+        # Dzēš iepriekšējo vēsturi no teksta lauka
+        self.history_text.delete(1.0, tk.END)
+        # Izmanto ciklu, lai pārbaudītu spēles gājienu vēsturi
         for player, move in self.game.moves_history:
+            # Nosaka spēlētāja nosaukumu atkarībā no spēlētāja uzdevuma (lietotājs vai dators)
             player_name = "Lietotājs" if player == Player.USER else "Dators"
+            # Pievieno tekstu teksta laukā ar spēlētāja nosaukumu un veiktā gājiena informāciju
             self.history_text.insert(tk.END, f"{player_name} dalīja ar {move}\n")
 
 # Metode, kas reseto spēli un sāk jaunu spēli
     def reset_game(self):
+        # Atjaunina gājienu vēstures teksta lauku
         self.update_history()
+        # Izveido jaunu spēles objektu, lai sāktu no sākuma
         self.game = Game()
+        # Izvēlas, kurš spēlētājs sāk spēli (lietotājs vai dators)
         self.choose_starting_player()
+        # Atjaunina tekstu ar pašreizējo skaitli
         self.label.config(text=f"Pašreizējais skaitlis: {self.game.current_number}")
+        # Atjaunina pogu stāvokli atbilstoši spēles stāvoklim
         self.update_buttons()
 
 if __name__ == "__main__": #Šī rindiņa pārbauda, vai šis skripts tiek izpildīts kā galvenais skripts (nevis importēts kā modulis)
