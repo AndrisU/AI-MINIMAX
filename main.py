@@ -225,7 +225,7 @@ class GameGUI:
             self.game.make_move(best_move)
             self.label.config(text=f"Pašreizējais skaitlis: {self.game.current_number}")
             self.update_history()
-
+            self.update_buttons()
             if self.game.is_game_over():
                
                 messagebox.showinfo("Spēle beigusies", "Dators uzvarēja!")
