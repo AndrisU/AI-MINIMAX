@@ -35,15 +35,19 @@ class Player(Enum):
 # Definē spēles klasi, kas satur spēles loģiku un metodes
 class Game:
     
-    def __init__(self, starting_number=21504, target_number=7):
+    def __init__(self, starting_number=12902400, target_number=7):
         self.current_number = starting_number
         self.target_number = target_number
         self.current_player = Player.USER
         self.moves_history = []
 
+# definē funkciju "is_divisible", kas atgriež "True" vai "False"
     def is_divisible(self, number):
         return self.current_number % number == 0
-
+    
+# definē make_move metodi, kas pārbauda vai spēlētājs var veikt gājienu ar doto skaitli.
+#  Ja dotais skaitlis dalās bez atlikuma ar pašreizējo skaitli, tad metode reģistrē spēlētāja
+#  gājienu vēsturē, samazina pašreizējo skaitli, un nomaina pašreizējo spēlētāju uz otro.    
     def make_move(self, number):
         if self.is_divisible(number):
             self.moves_history.append((self.current_player, number))
@@ -52,17 +56,23 @@ class Game:
         else:
             raise ValueError("Invalid move")
 
+#funkcija pārslēdz spēlētāju
     def switch_player(self):
         if self.current_player == Player.USER:
             self.current_player = Player.COMPUTER
         else:
             self.current_player = Player.USER
 
+#pārbauda, vai spēle ir beigusies, salīdzinot pašreizējo skaitli ar mērķa skaitli un atgriežot "True", ja tie sakrīt, citādi atgriežot "False".
     def is_game_over(self):
         return self.current_number == self.target_number
 
+    # normalizē atgriezto vērtību, lai tā būtu intervālā no -1 līdz 1.
+    # Šāda normalizācija var palīdzēt algoritmam labāk saprast relatīvo
+    # novērtējumu starp dažādiem spēles stāvokļiem.
     def evaluate_heuristic(self):
-        return self.current_number - self.target_number
+        return (self.current_number - self.target_number) / max(abs(self.target_number), abs(self.current_number))
+
 
 
     def minimax(self, depth, maximizing_player):
@@ -71,8 +81,8 @@ class Game:
         # Ja algoritms pašlaik meklē lielāko iespējamo vērtību (maksimizē)
         if maximizing_player:       
             max_eval = float('-inf') # Sāk ar negatīvu bezgalību kā sākotnējo maksimālo vērtību           
-            for number in [2, 3, 4]:# Izmēģina visas iespējamas darbības (dalīšana ar 2, 3, 4)
-                if self.is_divisible(number):# Ja ir iespējams dalīt ar šo skaitli
+            for number in [2, 3, 4, 5]:# Izmēģina visas iespējamas darbības (dalīšana ar 2, 3, 4, 5)
+                if self.is_divisible(number):# Ja ir iespējams - dalīt ar šo skaitli
                     self.current_number //= number# Atjaunina pašreizējo skaitli, dalot to ar "number" un saglabājot veselo daļu
                     eval = self.minimax(depth - 1, False)# Rekursīvi izsauc minimax algoritmu nākamajā līmenī, ņemot vērā pretinieka labāko gājienu
                     self.current_number *= number# Atjauno pašreizējo skaitli, reizinot to ar "number" un atceļ iepriekšējo dalīšanas darbību
@@ -81,8 +91,8 @@ class Game:
         # Ja algoritms pašlaik meklē mazāko iespējamo vērtību (minimizē)
         else:
             min_eval = float('inf')# Sāk ar pozitīvu bezgalību kā sākotnējo minimālo vērtību
-            for number in [2, 3, 4]:# Izmēģina visas iespējamas darbības (dalīšana ar 2, 3, 4)
-                if self.is_divisible(number):# Ja ir iespējams dalīt ar šo skaitli
+            for number in [2, 3, 4, 5]:# Izmēģina visas iespējamas darbības (dalīšana ar 2, 3, 4, 5)
+                if self.is_divisible(number):# Ja ir iespējams - dalīt ar šo skaitli
                     self.current_number //= number# Atjaunina pašreizējo skaitli, dalot to ar "number" un saglabājot veselo daļu
                     eval = self.minimax(depth - 1, True)# Rekursīvi izsauc minimax algoritmu nākamajā līmenī, ņemot vērā pretinieka labāko gājienu
                     self.current_number *= number# Atjauno pašreizējo skaitli, reizinot to ar "number" un atceļ iepriekšējo dalīšanas darbību
@@ -96,15 +106,14 @@ class GameGUI:
 # Konstruktors GameGUI klasei, kas inicializē saskarni
     def __init__(self, game):
         
-        self.game = game
-        self.window = tk.Tk()
-        self.window.title("Divpersonu spēle")
-        center_window(self.window,500,500)
-        self.window.lift()
-        self.create_widgets()
-        self.choose_starting_player()
-        
-        self.window.mainloop()
+        self.game = game# Saglabā spēles objektu
+        self.window = tk.Tk()# Izveido jaunu Tkinter logu
+        self.window.title("Divpersonu spēle")# Iestata loga virsrakstu
+        center_window(self.window,500,600)# Centrē logu un iestata tā izmērus
+        self.window.lift()# Paceļ logu virs citiem logiem
+        self.create_widgets()# Izveido saskarnes elementus
+        self.choose_starting_player()# Izvēlas sākuma spēlētāju
+        self.window.mainloop()# Sāk Tkinter galveno cilpu
 
 # Metode, kas izveido grafiskās lietotāja saskarnes komponentes
     def create_widgets(self):
@@ -125,19 +134,22 @@ class GameGUI:
         self.button4 = tk.Button(self.window, text="Dalīt ar 4",font=("Arial", 15), command=lambda: self.on_user_move(4))
         self.button4.pack()
 
+        self.button5 = tk.Button(self.window, text="Dalīt ar 5",font=("Arial", 15), command=lambda: self.on_user_move(5))
+        self.button5.pack()
+
         self.reset_button = tk.Button(self.window, text="Restartēt spēli",font=("Arial", 15), command=self.reset_game)
         self.reset_button.pack()
 
         self.history_label = tk.Label(self.window, text="Gājienu vēsture:")
         self.history_label.pack()
 
-        self.history_text = tk.Text(self.window, width=30, height=10)
+        self.history_text = tk.Text(self.window, width=30, height=20)
         self.history_text.pack()
 
 
 # Metode, kas atjaunina pogu stāvokli un krāsu atkarībā no to spējas dalīt pašreizējo skaitli        
     def update_buttons(self):
-        for button, number in [(self.button2, 2), (self.button3, 3), (self.button4, 4)]:
+        for button, number in [(self.button2, 2), (self.button3, 3), (self.button4, 4), (self.button5, 5)]:
             if self.game.is_divisible(number):
                 button.config(bg="green", state=tk.NORMAL)
             else:
@@ -150,8 +162,9 @@ class GameGUI:
         choose_player_window = tk.Toplevel(self.window)
         choose_player_window.title("Izvēlies, kurš sāk spēli")
         choose_player_window.update_idletasks()
-        choose_player_window.geometry(center_window(choose_player_window,500,500))
+        choose_player_window.geometry(center_window(choose_player_window,500,600))
         choose_player_window.lift()
+
         # Izveido pogu ar tekstu "cilvēks" un piesaista tai funkciju, kas atbilst Player.USER
         asd_button = tk.Button(choose_player_window, text="cilvēks",font=("Arial", 20), command=lambda: self.set_starting_player(Player.USER, choose_player_window))
         asd_button.pack(pady=10)
@@ -185,7 +198,7 @@ class GameGUI:
             else:
                 self.computer_move()
 
-            
+
 
         except ValueError:
             messagebox.showerror("Kļūda", "Nederīgs gājiens")
@@ -198,10 +211,10 @@ class GameGUI:
         best_move = None
         best_eval = float('-inf')
         
-        for number in [2, 3, 4]:
+        for number in [2, 3, 4, 5]:
             if self.game.is_divisible(number):
                 self.game.current_number //= number
-                eval = self.game.minimax(3, False)  # var mainīt pārmeklēšanas dziļumu pēc nepieciešamības
+                eval = self.game.minimax(20, False)  # var mainīt pārmeklēšanas dziļumu pēc nepieciešamības
                 self.game.current_number *= number 
 
                 if eval > best_eval:
@@ -233,6 +246,7 @@ class GameGUI:
 
 # Metode, kas reseto spēli un sāk jaunu spēli
     def reset_game(self):
+        self.update_history()
         self.game = Game()
         self.choose_starting_player()
         self.label.config(text=f"Pašreizējais skaitlis: {self.game.current_number}")
